@@ -21,8 +21,52 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  preview:
+    name: Show current version and candidates
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Show version candidates
+        env:
+          VERSION_BUMP: ${{ inputs.version_bump }}
+        run: |
+          set -euo pipefail
+
+          LATEST_TAG=$(git tag --list 'v*' --sort=-v:refname \
+            | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' \
+            | sed -n '1p' || true)
+
+          if [[ -z "$LATEST_TAG" ]]; then
+            BASE_VERSION="1.0.0"
+          else
+            BASE_VERSION="${LATEST_TAG#v}"
+          fi
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$BASE_VERSION"
+
+          {
+            echo "## 現在のバージョン: **$BASE_VERSION**"
+            echo ""
+            echo "| 選択 | 更新後のバージョン |"
+            echo "|---|---|"
+            echo "| patch | \`$BASE_VERSION → ${MAJOR}.${MINOR}.$((PATCH + 1))\` |"
+            echo "| minor | \`$BASE_VERSION → ${MAJOR}.$((MINOR + 1)).0\` |"
+            echo "| major | \`$BASE_VERSION → $((MAJOR + 1)).0.0\` |"
+            echo ""
+            echo "今回の選択: **$VERSION_BUMP**"
+            echo ""
+            echo "問題なければ **Review deployments** から承認してください。違っていれば Reject してやり直します。"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   release:
     name: Build signed APK and publish Release
+    needs: preview
+    environment: release
     runs-on: ubuntu-latest
 
     steps:
