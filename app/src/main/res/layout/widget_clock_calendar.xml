@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  iWidget(648x292px の枠)の実測を比率で表現。
+  左余白46 : 時計242 : 間隔36 : カレンダー265 : 右余白59
+  ウィジェットの大きさが変わっても同じ見た目のまま拡大縮小する。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="46" />
+
+    <AnalogClock
+        android:id="@+id/analog_clock"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="9.5dp"
+        android:layout_marginBottom="9.5dp"
+        android:layout_weight="242"
+        android:hand_hour="@drawable/hand_hour"
+        android:hand_minute="@drawable/hand_minute"
+        android:hand_second="@drawable/hand_second" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="36" />
+
+    <ImageView
+        android:id="@+id/calendar_image"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="265"
+        android:contentDescription="@string/widget_label"
+        android:scaleType="fitCenter" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="59" />
+</LinearLayout>

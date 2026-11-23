@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- 文字盤 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,54 a30,30 0 1,0 60,0 a30,30 0 1,0 -60,0 z" />
+    <!-- 12 / 3 / 6 / 9 の目盛り -->
+    <path
+        android:pathData="M54,26.5 L54,31 M81.5,54 L77,54 M54,81.5 L54,77 M26.5,54 L31,54"
+        android:strokeColor="#111111"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.2" />
+    <!-- 時針・分針 -->
+    <path
+        android:pathData="M54,54 L43.35,46.54"
+        android:strokeColor="#111111"
+        android:strokeLineCap="round"
+        android:strokeWidth="3.2" />
+    <path
+        android:pathData="M54,54 L72.19,43.5"
+        android:strokeColor="#111111"
+        android:strokeLineCap="round"
+        android:strokeWidth="2.6" />
+    <!-- 秒針(赤) -->
+    <path
+        android:pathData="M51,48.8 L65,73.05"
+        android:strokeColor="#E5383B"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.2" />
+    <path
+        android:fillColor="#111111"
+        android:pathData="M52,54 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 z" />
+</vector>
