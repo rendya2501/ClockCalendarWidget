@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.clockcalendarwidget"
+    namespace = "io.github.rendya2501.clockcalendarwidget"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.clockcalendarwidget"
+        applicationId = "io.github.rendya2501.clockcalendarwidget"
         minSdk = 31
         targetSdk = 35
         versionCode = 1

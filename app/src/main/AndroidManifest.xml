@@ -15,7 +15,7 @@
         android:supportsRtl="true">
 
         <receiver
-            android:name=".ClockCalendarWidget"
+            android:name="io.github.rendya2501.clockcalendarwidget.ClockCalendarWidget"
             android:exported="true"
             android:label="@string/widget_label">
             <intent-filter>

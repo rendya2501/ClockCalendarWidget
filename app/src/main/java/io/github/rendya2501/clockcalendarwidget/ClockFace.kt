@@ -1,4 +1,4 @@
-package com.example.clockcalendarwidget
+package io.github.rendya2501.clockcalendarwidget
 
 import android.content.Context
 import android.graphics.Bitmap
