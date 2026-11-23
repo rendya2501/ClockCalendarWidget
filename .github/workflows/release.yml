@@ -7,7 +7,7 @@ on:
         description: "リリースするバージョン (例: 1.1.0)"
         required: true
         type: string
-        default: "1.1.0"
+        default: "1.0.1"
       version_code:
         description: "versionCode (前回より大きい整数)"
         required: true
@@ -67,6 +67,9 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        
       - name: Prepare signing key
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -81,7 +84,7 @@ jobs:
           : "${KEY_PASSWORD:?GitHub Secret KEY_PASSWORD が未設定です}"
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/release-keystore.jks"
           echo "KEYSTORE_PATH=$RUNNER_TEMP/release-keystore.jks" >> "$GITHUB_ENV"
-
+        
       - name: Build release APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
