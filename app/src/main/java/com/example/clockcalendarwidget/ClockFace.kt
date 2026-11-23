@@ -17,10 +17,10 @@ object ClockFace {
     private const val DIAL_DP = 200f
 
     // ---- 見た目の調整用 ----
-    private const val NUMBER_RADIUS = 0.70f      // 数字を置く位置(半径比)
-    private const val NUMBER_SIZE = 0.13f        // 数字の大きさ(直径比)
+    private const val NUMBER_RADIUS = 0.72f      // 数字を置く位置(半径比)
+    private const val NUMBER_SIZE = 0.12f        // 数字の大きさ(直径比)
     private const val LABEL = "TYO"              // 文字盤の小さい文字。空文字で非表示
-    private const val LABEL_SIZE = 0.075f
+    private const val LABEL_SIZE = 0.07f
     private const val LABEL_OFFSET = 0.40f       // 中心から上へ(半径比)
 
     private const val TICK_OUTER = 0.98f         // 目盛りの外側(半径比)

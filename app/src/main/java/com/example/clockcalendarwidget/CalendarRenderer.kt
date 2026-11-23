@@ -24,10 +24,10 @@ object CalendarRenderer {
     private const val ROWS = 6
 
     private const val HEADER_X = 12f
-    private const val HEADER_SIZE = 42f
-    private const val WEEK_SIZE = 30f
-    private const val DATE_SIZE = 38f
-    private const val TODAY_RADIUS = 25f
+    private const val HEADER_SIZE = 40f
+    private const val WEEK_SIZE = 28f
+    private const val DATE_SIZE = 35f
+    private const val TODAY_RADIUS = 24f
 
     private val RED = Color.parseColor("#E5383B")
     private val WEEK_COLOR = Color.parseColor("#9A9A9E")
