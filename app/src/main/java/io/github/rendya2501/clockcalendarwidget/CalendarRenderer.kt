@@ -25,7 +25,7 @@ object CalendarRenderer {
 
     private const val HEADER_X = 12f
     private const val HEADER_SIZE = 40f
-    private const val WEEK_SIZE = 28f
+    private const val WEEK_SIZE = 32f
     private const val DATE_SIZE = 35f
     private const val TODAY_RADIUS = 24f
 
