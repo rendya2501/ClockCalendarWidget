@@ -11,8 +11,9 @@ android {
         applicationId = "io.github.rendya2501.clockcalendarwidget"
         minSdk = 31
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        // ローカルビルドでは既定値を使い、GitHub Actionsでは -P で上書きする
+        versionCode = providers.gradleProperty("appVersionCode").orElse("1").get().toInt()
+        versionName = providers.gradleProperty("appVersionName").orElse("1.0.0").get()
     }
 
     // GitHub Actionsでは環境変数で渡された署名キーを使う。無ければデバッグ署名でビルドする
