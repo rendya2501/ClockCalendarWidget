@@ -8,3 +8,6 @@ captures/
 .cxx/
 *.keystore
 *.jks
+
+# Release APKs
+app/release/
