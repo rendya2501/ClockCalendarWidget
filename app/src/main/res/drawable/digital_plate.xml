@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- デジタル時計の下に敷く白い板。針が下を通っても数字が読めるようにする(文字盤は常に白) -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+    <solid android:color="#E6FFFFFF" />
+    <!-- #800004-->
+    <corners android:radius="2dp" />
+</shape>

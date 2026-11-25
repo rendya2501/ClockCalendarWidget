@@ -29,16 +29,45 @@
         android:layout_height="match_parent"
         android:layout_weight="36" />
 
-    <AnalogClock
-        android:id="@+id/analog_clock"
+    <!-- 時計の部分。アナログ時計の手前(針の上)にデジタル時計を重ねる。
+         文字盤の中心軸(layout_gravity="center")を基準にし、下へオフセット配置することでサイズ変更時も位置を安定させる。 -->
+    <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginTop="9.5dp"
         android:layout_marginBottom="9.5dp"
-        android:layout_weight="242"
-        android:hand_hour="@drawable/hand_hour"
-        android:hand_minute="@drawable/hand_minute"
-        android:hand_second="@drawable/hand_second" />
+        android:layout_weight="242">
+
+        <AnalogClock
+            android:id="@+id/analog_clock"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:hand_hour="@drawable/hand_hour"
+            android:hand_minute="@drawable/hand_minute"
+            android:hand_second="@drawable/hand_second" />
+
+        <LinearLayout
+            android:id="@+id/digital_area"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <TextClock
+                android:id="@+id/digital_clock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/digital_plate"
+                android:format12Hour="HH:mm"
+                android:format24Hour="HH:mm"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:padding="0dp"
+                android:textColor="#111111"
+                android:textSize="14sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+    </FrameLayout>
 
     <FrameLayout
         android:layout_width="0dp"

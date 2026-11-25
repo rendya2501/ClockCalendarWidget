@@ -13,15 +13,17 @@ import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ListView
+import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
+import java.text.Collator
 import java.time.ZoneId
 
 /**
  * ウィジェットを長押しして開く設定画面(Android 12以降の「再設定」)。
- * 都市(タイムゾーン) / 表示(都市コード・秒針・週の始まり・左右の並び・背景の濃さ) / タップしたときに開くアプリ を設定する。
+ * 都市(タイムゾーン) / 表示(テーマ・デジタル時計・都市コード・秒針・週の始まり・左右の並び・背景の濃さ) / タップしたときに開くアプリ を設定する。
  */
 class SettingsActivity : Activity() {
 
@@ -37,6 +39,8 @@ class SettingsActivity : Activity() {
     private var apps: List<AppEntry> = emptyList()
 
     private lateinit var zoneRow: TextView
+    private lateinit var radioTheme: RadioGroup
+    private lateinit var switchDigital: Switch
     private lateinit var switchLabel: Switch
     private lateinit var switchSecondHand: Switch
     private lateinit var switchMondayStart: Switch
@@ -63,6 +67,8 @@ class SettingsActivity : Activity() {
         applyInsets()
 
         zoneRow = requireViewById<TextView>(R.id.zone_row)
+        radioTheme = requireViewById<RadioGroup>(R.id.radio_theme)
+        switchDigital = requireViewById<Switch>(R.id.switch_digital)
         switchLabel = requireViewById<Switch>(R.id.switch_label)
         switchSecondHand = requireViewById<Switch>(R.id.switch_second_hand)
         switchMondayStart = requireViewById<Switch>(R.id.switch_monday_start)
@@ -83,6 +89,14 @@ class SettingsActivity : Activity() {
         zoneRow.setOnClickListener { showZonePicker() }
 
         // ---- 表示 ----
+        radioTheme.check(
+            when (config.theme) {
+                ThemeMode.DARK -> R.id.radio_theme_dark
+                ThemeMode.LIGHT -> R.id.radio_theme_light
+                ThemeMode.SYSTEM -> R.id.radio_theme_system
+            }
+        )
+        switchDigital.isChecked = config.showDigital
         switchLabel.isChecked = config.showLabel
         switchSecondHand.isChecked = config.showSecondHand
         switchMondayStart.isChecked = config.mondayStart
@@ -115,21 +129,23 @@ class SettingsActivity : Activity() {
 
     // ---------------------------------------------------------------- 都市(タイムゾーン)
 
-    /** 先頭に「端末の設定に従う」、その後ろに都市名順の「Tokyo (TYO)」を並べる */
+    /** 先頭に「端末の設定に従う」、その後ろに都市名順の「東京 (TYO)」を並べる */
     private fun buildZoneItems(): List<ZoneItem> {
+        val collator = Collator.getInstance()
         val cities = ZoneCatalog.ids().map { id ->
             val zone = ZoneId.of(id)
             ZoneItem(
                 id = id,
                 title = ZoneLabels.title(zone),
-                // 都市名・都市コード・IDのどれでも検索できる
-                searchKey = "${ZoneLabels.cityName(id)} ${ZoneLabels.codeFor(zone)} $id".lowercase(),
+                // 端末の言語の都市名・英語の都市名・都市コード・IDのどれでも検索できる
+                searchKey = "${ZoneLabels.displayName(id)} ${ZoneLabels.cityName(id)} " +
+                        "${ZoneLabels.codeFor(zone)} $id".lowercase(),
             )
-        }
+        }.sortedWith(Comparator { a, b -> collator.compare(a.title, b.title) })
         return listOf(ZoneItem(null, getString(R.string.follow_system_zone), "")) + cities
     }
 
-    /** 設定画面の「Tokyo (TYO) ▼」の行 */
+    /** 設定画面の「東京 (TYO) ▼」の行 */
     private fun updateZoneRow() {
         val id = selectedZoneId
         zoneRow.text = if (id == null) {
@@ -211,6 +227,12 @@ class SettingsActivity : Activity() {
     private fun save() {
         val config = WidgetConfig(
             timeZoneId = selectedZoneId,
+            theme = when (radioTheme.checkedRadioButtonId) {
+                R.id.radio_theme_light -> ThemeMode.LIGHT
+                R.id.radio_theme_system -> ThemeMode.SYSTEM
+                else -> ThemeMode.DARK
+            },
+            showDigital = switchDigital.isChecked,
             showLabel = switchLabel.isChecked,
             showSecondHand = switchSecondHand.isChecked,
             mondayStart = switchMondayStart.isChecked,
