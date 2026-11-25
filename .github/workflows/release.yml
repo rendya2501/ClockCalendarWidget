@@ -208,7 +208,7 @@ jobs:
           VERSION_NAME: ${{ needs.preview.outputs.version_name }}
         run: |
           mv app/build/outputs/apk/release/app-release.apk \
-            "app/build/outputs/apk/release/clock-calendar-widget-release-v${VERSION_NAME}.apk"
+            "app/build/outputs/apk/release/clock-calendar-widget-v${VERSION_NAME}.apk"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -216,5 +216,5 @@ jobs:
           tag_name: v${{ needs.preview.outputs.version_name }}
           name: v${{ needs.preview.outputs.version_name }}
           generate_release_notes: true
-          files: app/build/outputs/apk/release/clock-calendar-widget-release-v${{ needs.preview.outputs.version_name }}.apk
+          files: app/build/outputs/apk/release/clock-calendar-widget-v${{ needs.preview.outputs.version_name }}.apk
           fail_on_unmatched_files: true
