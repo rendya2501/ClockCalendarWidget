@@ -2,4 +2,24 @@
 <resources>
     <string name="app_name">Clock Calendar Widget</string>
     <string name="widget_label">時計とカレンダー</string>
+
+    <!-- 設定画面 -->
+    <string name="settings_title">ウィジェットの設定</string>
+    <string name="section_zone">タイムゾーン</string>
+    <string name="zone_city">都市</string>
+    <string name="follow_system_zone">端末の設定に従う</string>
+    <string name="zone_row_system">端末の設定: %1$s</string>
+    <string name="picker_search_hint">都市名・コードで検索(例: London)</string>
+    <string name="section_display">表示</string>
+    <string name="show_label">都市コードを表示する</string>
+    <string name="show_second_hand">秒針を表示する</string>
+    <string name="monday_start">週の始まりを月曜にする</string>
+    <string name="swap_positions">時計とカレンダーの左右を入れ替える</string>
+    <string name="background_opacity">背景の濃さ: %1$d%%</string>
+    <string name="section_apps">タップしたときに開くアプリ</string>
+    <string name="tap_clock">時計の部分</string>
+    <string name="tap_calendar">カレンダーの部分</string>
+    <string name="app_default_clock">既定の時計アプリ</string>
+    <string name="app_default_calendar">既定のカレンダーアプリ</string>
+    <string name="save">保存</string>
 </resources>

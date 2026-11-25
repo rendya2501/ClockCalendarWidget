@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  widget_clock_calendar.xml の時計とカレンダーを左右入れ替えただけのレイアウト(設定「左右を入れ替える」用)。
+  左右の余白・間隔の比率はそのまま。見た目を変えるときは両方のファイルをそろえること。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_bg"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="46" />
+
+    <ImageView
+        android:id="@+id/calendar_image"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="265"
+        android:contentDescription="@string/widget_label"
+        android:scaleType="fitCenter" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="36" />
+
+    <AnalogClock
+        android:id="@+id/analog_clock"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_marginTop="9.5dp"
+        android:layout_marginBottom="9.5dp"
+        android:layout_weight="242"
+        android:hand_hour="@drawable/hand_hour"
+        android:hand_minute="@drawable/hand_minute"
+        android:hand_second="@drawable/hand_second" />
+
+    <FrameLayout
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="59" />
+</LinearLayout>

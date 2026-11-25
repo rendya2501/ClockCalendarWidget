@@ -35,7 +35,7 @@ object CalendarRenderer {
     private val OTHER_MONTH_COLOR = Color.parseColor("#48484C")   // 前月・翌月の日付
     private val DATE_COLOR = Color.WHITE
 
-    fun render(today: LocalDate = LocalDate.now()): Bitmap {
+    fun render(today: LocalDate = LocalDate.now(), mondayStart: Boolean = false): Bitmap {
         val width = (CELL_W * 7).toInt()
         val height = (HEADER_H + WEEK_H + CELL_H * ROWS).toInt()
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -55,14 +55,13 @@ object CalendarRenderer {
         paint.textSize = WEEK_SIZE
         paint.textAlign = Paint.Align.CENTER
         val weekY = baseline(paint, HEADER_H + WEEK_H / 2f)
-        listOf("S", "M", "T", "W", "T", "F", "S").forEachIndexed { i, label ->
+        WeekLayout.labels(mondayStart).forEachIndexed { i, label ->
             canvas.drawText(label, CELL_W * (i + 0.5f), weekY, paint)
         }
 
-        // 日付(その月の1日を含む週の日曜から42日ぶん)
+        // 日付(その月の1日を含む週の最初の日から42日ぶん)
         paint.textSize = DATE_SIZE
-        val first = today.withDayOfMonth(1)
-        val gridStart = first.minusDays((first.dayOfWeek.value % 7).toLong())   // 日曜=0
+        val gridStart = WeekLayout.gridStart(today.withDayOfMonth(1), mondayStart)
         for (i in 0 until ROWS * 7) {
             val date = gridStart.plusDays(i.toLong())
             val col = i % 7
@@ -79,7 +78,7 @@ object CalendarRenderer {
             paint.color = when {
                 isToday -> Color.WHITE
                 !inMonth -> OTHER_MONTH_COLOR
-                col == 0 || col == 6 -> WEEKEND_COLOR
+                WeekLayout.isWeekend(col, mondayStart) -> WEEKEND_COLOR
                 else -> DATE_COLOR
             }
             canvas.drawText(date.dayOfMonth.toString(), cx, baseline(paint, cy), paint)

@@ -10,7 +10,7 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
-/** アナログ時計の文字盤(白い円+60本の目盛り+数字1〜12+TYO)を描く */
+/** アナログ時計の文字盤(白い円+60本の目盛り+数字1〜12+ラベル)を描く */
 object ClockFace {
 
     // 針のvector(hand_*.xml)の width/height(200dp) と必ず合わせること
@@ -19,7 +19,6 @@ object ClockFace {
     // ---- 見た目の調整用 ----
     private const val NUMBER_RADIUS = 0.72f      // 数字を置く位置(半径比)
     private const val NUMBER_SIZE = 0.12f        // 数字の大きさ(直径比)
-    private const val LABEL = "TYO"              // 文字盤の小さい文字。空文字で非表示
     private const val LABEL_SIZE = 0.07f
     private const val LABEL_OFFSET = 0.40f       // 中心から上へ(半径比)
 
@@ -35,7 +34,8 @@ object ClockFace {
     private val TICK_COLOR = Color.parseColor("#8A8A8A")
     private val TICK_COLOR_BIG = Color.parseColor("#111111")
 
-    fun createDial(context: Context): Bitmap {
+    /** @param label 文字盤の上の方に描く小さい文字(例: TYO)。空文字なら描かない */
+    fun createDial(context: Context, label: String): Bitmap {
         val metrics = context.resources.displayMetrics
         val size = (DIAL_DP * metrics.density).roundToInt()
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -81,12 +81,12 @@ object ClockFace {
             canvas.drawText(n.toString(), x, y, paint)
         }
 
-        // TYO
-        if (LABEL.isNotEmpty()) {
+        // ラベル
+        if (label.isNotEmpty()) {
             paint.color = LABEL_COLOR
             paint.textSize = size * LABEL_SIZE
             val labelShift = -(paint.fontMetrics.ascent + paint.fontMetrics.descent) / 2f
-            canvas.drawText(LABEL, r, r - r * LABEL_OFFSET + labelShift, paint)
+            canvas.drawText(label, r, r - r * LABEL_OFFSET + labelShift, paint)
         }
         return bitmap
     }
