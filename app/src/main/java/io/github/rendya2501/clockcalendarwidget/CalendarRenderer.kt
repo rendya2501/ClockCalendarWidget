@@ -42,7 +42,7 @@ object CalendarRenderer {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
 
-        // 見出し「2026/11/22 (Sun)」(今日の日付と曜日)
+        // 見出し「2026/11/22 Sun」(今日の日付と曜日)
         paint.color = palette.accent
         paint.textSize = HEADER_SIZE
         paint.textAlign = Paint.Align.LEFT
