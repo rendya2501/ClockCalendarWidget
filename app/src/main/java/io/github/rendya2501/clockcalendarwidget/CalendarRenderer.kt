@@ -27,15 +27,14 @@ object CalendarRenderer {
     private const val HEADER_SIZE = 40f
     private const val WEEK_SIZE = 38f
     private const val DATE_SIZE = 35f
-    private const val TODAY_RADIUS = 24f
+    private const val TODAY_RADIUS = 27f
 
-    private val RED = Color.parseColor("#E5383B")
-    private val WEEK_COLOR = Color.parseColor("#9A9A9E")
-    private val WEEKEND_COLOR = Color.parseColor("#7A7A7E")
-    private val OTHER_MONTH_COLOR = Color.parseColor("#48484C")   // 前月・翌月の日付
-    private val DATE_COLOR = Color.WHITE
 
-    fun render(today: LocalDate = LocalDate.now(), mondayStart: Boolean = false): Bitmap {
+    fun render(
+        today: LocalDate = LocalDate.now(),
+        mondayStart: Boolean = false,
+        palette: Palette = Palette.DARK,
+    ): Bitmap {
         val width = (CELL_W * 7).toInt()
         val height = (HEADER_H + WEEK_H + CELL_H * ROWS).toInt()
         val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
@@ -43,15 +42,15 @@ object CalendarRenderer {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         paint.typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
 
-        // 見出し「2026/11/22 (Sun)」(今日の日付と曜日)
-        paint.color = RED
+        // 見出し「2026/11/22 Sun」(今日の日付と曜日)
+        paint.color = palette.accent
         paint.textSize = HEADER_SIZE
         paint.textAlign = Paint.Align.LEFT
-        val title = today.format(DateTimeFormatter.ofPattern("yyyy/MM/dd (EEE)", Locale.ENGLISH))
+        val title = today.format(DateTimeFormatter.ofPattern("yyyy/MM/dd EEE", Locale.ENGLISH))
         canvas.drawText(title, HEADER_X, baseline(paint, HEADER_H / 2f), paint)
 
         // 曜日
-        paint.color = WEEK_COLOR
+        paint.color = palette.week
         paint.textSize = WEEK_SIZE
         paint.textAlign = Paint.Align.CENTER
         val weekY = baseline(paint, HEADER_H + WEEK_H / 2f)
@@ -72,14 +71,14 @@ object CalendarRenderer {
             val inMonth = date.monthValue == today.monthValue
 
             if (isToday) {
-                paint.color = RED
+                paint.color = palette.accent
                 canvas.drawCircle(cx, cy, TODAY_RADIUS, paint)
             }
             paint.color = when {
                 isToday -> Color.WHITE
-                !inMonth -> OTHER_MONTH_COLOR
-                WeekLayout.isWeekend(col, mondayStart) -> WEEKEND_COLOR
-                else -> DATE_COLOR
+                !inMonth -> palette.otherMonth
+                WeekLayout.isWeekend(col, mondayStart) -> palette.weekend
+                else -> palette.date
             }
             canvas.drawText(date.dayOfMonth.toString(), cx, baseline(paint, cy), paint)
         }

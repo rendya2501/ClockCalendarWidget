@@ -29,16 +29,14 @@
         android:layout_height="match_parent"
         android:layout_weight="36" />
 
-    <AnalogClock
-        android:id="@+id/analog_clock"
+    <!-- 時計の部分は widget_clock_face.xml に共通化してある -->
+    <include
+        layout="@layout/widget_clock_face"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginTop="9.5dp"
         android:layout_marginBottom="9.5dp"
-        android:layout_weight="242"
-        android:hand_hour="@drawable/hand_hour"
-        android:hand_minute="@drawable/hand_minute"
-        android:hand_second="@drawable/hand_second" />
+        android:layout_weight="242" />
 
     <FrameLayout
         android:layout_width="0dp"

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  時計の部分(アナログ時計 + デジタル時計 + アラームのベル)。
+  widget_clock_calendar.xml と widget_calendar_clock.xml の両方から <include> して使う。
+  大きさ・余白・並びの重みは、<include> する側で指定する。
+
+  アナログ時計(文字盤)の4辺にぴったり合わせて、重ねる部品の枠(digital_area)を置く。
+  枠の中は文字盤の幅・高さに対する比率だけで位置と大きさが決まるので、
+  ウィジェットの大きさが変わっても、都市名(TYO)と同じように文字盤と一緒に拡大縮小する。
+    縦: 上から 57(空き) : 12(デジタル時計) : 2(空き) : 8(ベル) : 21(空き)  = 100
+    横: デジタル時計は 35 : 30 : 35、ベルは 46 : 8 : 46
+-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- wrap_content にすると、文字盤の大きさ(正方形)ぴったりになる -->
+    <AnalogClock
+        android:id="@+id/analog_clock"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:hand_hour="@drawable/hand_hour"
+        android:hand_minute="@drawable/hand_minute"
+        android:hand_second="@drawable/hand_second" />
+
+    <LinearLayout
+        android:id="@+id/digital_area"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignLeft="@id/analog_clock"
+        android:layout_alignTop="@id/analog_clock"
+        android:layout_alignRight="@id/analog_clock"
+        android:layout_alignBottom="@id/analog_clock"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="57" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="12"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="35" />
+
+            <!-- 枠(板)の大きさ=文字の大きさ。枠に収まる最大の大きさに自動で調整される。
+                 板の色と文字の色はテーマに合わせてコードから指定する -->
+            <TextClock
+                android:id="@+id/digital_clock"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="30"
+                android:autoSizeMaxTextSize="40sp"
+                android:autoSizeMinTextSize="4sp"
+                android:autoSizeStepGranularity="0.5sp"
+                android:autoSizeTextType="uniform"
+                android:background="@drawable/digital_plate"
+                android:fontFeatureSettings="tnum"
+                android:format12Hour="HH:mm"
+                android:format24Hour="HH:mm"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:maxLines="1"
+                android:padding="0dp"
+                android:textColor="#111111"
+                android:textStyle="bold" />
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="35" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="2" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="8"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="46" />
+
+            <!-- アラームが設定されているときだけ、コードから表示する -->
+            <ImageView
+                android:id="@+id/alarm_icon"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="8"
+                android:contentDescription="@null"
+                android:scaleType="fitCenter"
+                android:src="@drawable/ic_alarm_bell"
+                android:visibility="gone" />
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="46" />
+        </LinearLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="21" />
+    </LinearLayout>
+</RelativeLayout>

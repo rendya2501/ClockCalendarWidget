@@ -18,7 +18,7 @@ object ClockFace {
 
     // ---- 見た目の調整用 ----
     private const val NUMBER_RADIUS = 0.72f      // 数字を置く位置(半径比)
-    private const val NUMBER_SIZE = 0.12f        // 数字の大きさ(直径比)
+    private const val NUMBER_SIZE = 0.10f        // 数字の大きさ(直径比)
     private const val LABEL_SIZE = 0.07f
     private const val LABEL_OFFSET = 0.40f       // 中心から上へ(半径比)
 
@@ -27,6 +27,7 @@ object ClockFace {
     private const val TICK_INNER_BIG = 0.90f     // 5つごとの目盛りの内側
     private const val TICK_WIDTH = 0.005f        // 線の太さ(直径比)
     private const val TICK_WIDTH_BIG = 0.012f
+    private const val RING_WIDTH = 0.008f       // 外周の輪郭線の太さ(直径比)
 
     private val DIAL_COLOR = Color.WHITE
     private val NUMBER_COLOR = Color.parseColor("#111111")
@@ -34,8 +35,11 @@ object ClockFace {
     private val TICK_COLOR = Color.parseColor("#8A8A8A")
     private val TICK_COLOR_BIG = Color.parseColor("#111111")
 
-    /** @param label 文字盤の上の方に描く小さい文字(例: TYO)。空文字なら描かない */
-    fun createDial(context: Context, label: String): Bitmap {
+    /**
+     * @param label 文字盤の上の方に描く小さい文字(例: TYO)。空文字なら描かない
+     * @param ringColor 文字盤の外周に引く輪郭線の色。nullなら引かない
+     */
+    fun createDial(context: Context, label: String, ringColor: Int? = null): Bitmap {
         val metrics = context.resources.displayMetrics
         val size = (DIAL_DP * metrics.density).roundToInt()
         val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
@@ -48,6 +52,16 @@ object ClockFace {
         // 文字盤
         paint.color = DIAL_COLOR
         canvas.drawCircle(r, r, r, paint)
+
+        // 外周の輪郭線(背景が明るいときに文字盤の縁が見えるように)
+        if (ringColor != null) {
+            val ringWidth = size * RING_WIDTH
+            paint.style = Paint.Style.STROKE
+            paint.strokeWidth = ringWidth
+            paint.color = ringColor
+            canvas.drawCircle(r, r, r - ringWidth / 2f, paint)
+            paint.style = Paint.Style.FILL
+        }
 
         // 目盛り(60本。5本ごとに太く長く)
         paint.style = Paint.Style.STROKE
