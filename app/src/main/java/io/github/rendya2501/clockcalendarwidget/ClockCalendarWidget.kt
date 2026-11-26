@@ -1,5 +1,6 @@
 package io.github.rendya2501.clockcalendarwidget
 
+import android.app.AlarmManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
@@ -28,13 +29,14 @@ class ClockCalendarWidget : AppWidgetProvider() {
         WidgetPrefs.delete(context, appWidgetIds)
     }
 
-    // 日付・時刻・タイムゾーンが変わったらカレンダーを描き直す
+    // 日付・時刻・タイムゾーン・次のアラームが変わったら描き直す
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
             Intent.ACTION_DATE_CHANGED,
             Intent.ACTION_TIME_CHANGED,
-            Intent.ACTION_TIMEZONE_CHANGED -> {
+            Intent.ACTION_TIMEZONE_CHANGED,
+            AlarmManager.ACTION_NEXT_ALARM_CLOCK_CHANGED -> {
                 val manager = AppWidgetManager.getInstance(context)
                 val ids = manager.getAppWidgetIds(
                     ComponentName(context, ClockCalendarWidget::class.java)
@@ -96,10 +98,15 @@ class ClockCalendarWidget : AppWidgetProvider() {
             )
 
             // デジタル時計(文字盤の中)。表示のオン/オフと、針と同じタイムゾーン
-            views.setViewVisibility(R.id.digital_area, if (config.showDigital) View.VISIBLE else View.GONE)
+            // (板は文字盤と同じ白で、テーマに関係なく共通)
+            views.setViewVisibility(R.id.digital_clock, if (config.showDigital) View.VISIBLE else View.GONE)
             views.setString(R.id.digital_clock, "setTimeZone", config.timeZoneId)
 
-            // デジタル時計の位置と大きさは、レイアウト側で文字盤に対する比率として決めてある
+            // アラームのベル。次のアラームが設定されているときだけ表示する
+            val hasAlarm = context.getSystemService(AlarmManager::class.java)?.nextAlarmClock != null
+            views.setViewVisibility(R.id.alarm_icon, if (hasAlarm) View.VISIBLE else View.GONE)
+
+            // デジタル時計とベルの位置・大きさは、レイアウト側で文字盤に対する比率として決めてある
             // (ウィジェットの大きさを推定して計算する必要はない)
 
             // 針のタイムゾーン。null なら端末の設定に従う
@@ -135,26 +142,23 @@ class ClockCalendarWidget : AppWidgetProvider() {
         }
 
         /**
-         * 端末の時計アプリを探し、アイコンをタップしたときと同じ起動用Intentを作る。
-         * 見つからなければ標準の「アラームを表示」Intentにフォールバックする。
+         * probe(例: アラームを表示する)を受け付ける端末の既定アプリを探し、アイコンをタップしたときと同じ起動用Intentを作る。
+         * 見つからなければ probe そのものを返す。
          */
         @Suppress("DEPRECATION")
-        private fun defaultClockIntent(context: Context): Intent {
+        private fun defaultAppIntent(context: Context, probe: Intent): Intent {
             val pm = context.packageManager
-            val probe = Intent(AlarmClock.ACTION_SHOW_ALARMS)
             val pkg = pm.resolveActivity(probe, PackageManager.MATCH_DEFAULT_ONLY)
                 ?.activityInfo?.packageName
             return pkg?.let { pm.getLaunchIntentForPackage(it) } ?: probe
         }
 
-        /** 端末の既定のカレンダーアプリ(Googleカレンダーなど)を起動するIntentを作る */
-        @Suppress("DEPRECATION")
-        private fun defaultCalendarIntent(context: Context): Intent {
-            val pm = context.packageManager
-            val probe = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALENDAR)
-            val pkg = pm.resolveActivity(probe, PackageManager.MATCH_DEFAULT_ONLY)
-                ?.activityInfo?.packageName
-            return pkg?.let { pm.getLaunchIntentForPackage(it) } ?: probe
-        }
+        /** 端末の既定の時計アプリ */
+        private fun defaultClockIntent(context: Context): Intent =
+            defaultAppIntent(context, Intent(AlarmClock.ACTION_SHOW_ALARMS))
+
+        /** 端末の既定のカレンダーアプリ(Googleカレンダーなど) */
+        private fun defaultCalendarIntent(context: Context): Intent =
+            defaultAppIntent(context, Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_APP_CALENDAR))
     }
 }
