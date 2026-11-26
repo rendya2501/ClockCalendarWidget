@@ -46,7 +46,7 @@ object CalendarRenderer {
         paint.color = palette.accent
         paint.textSize = HEADER_SIZE
         paint.textAlign = Paint.Align.LEFT
-        val title = today.format(DateTimeFormatter.ofPattern("yyyy/MM/dd (EEE)", Locale.ENGLISH))
+        val title = today.format(DateTimeFormatter.ofPattern("yyyy/MM/dd EEE", Locale.ENGLISH))
         canvas.drawText(title, HEADER_X, baseline(paint, HEADER_H / 2f), paint)
 
         // 曜日
