@@ -17,45 +17,87 @@
         android:layout_height="match_parent"
         android:layout_weight="46" />
 
-    <!-- 時計の部分。アナログ時計の手前(針の上)にデジタル時計を重ねる。
-         文字盤の中心軸(layout_gravity="center")を基準にし、下へオフセット配置することでサイズ変更時も位置を安定させる。 -->
-    <FrameLayout
+    <!-- 時計の部分。
+         アナログ時計(文字盤)の4辺にぴったり合わせて、デジタル時計の枠(digital_area)を重ねる。
+         枠の中は、文字盤の幅・高さに対する比率だけで位置と大きさが決まるので、
+         ウィジェットの大きさが変わっても、都市名(TYO)と同じように文字盤と一緒に拡大縮小する。
+         位置: 縦は上から 57 : 12 : 31(中心より少し下、8と4の少し上)、横は 35 : 30 : 35。 -->
+    <RelativeLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_marginTop="9.5dp"
         android:layout_marginBottom="9.5dp"
         android:layout_weight="242">
 
+        <!-- wrap_content にすると、文字盤の大きさ(正方形)ぴったりになる -->
         <AnalogClock
             android:id="@+id/analog_clock"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:hand_hour="@drawable/hand_hour"
             android:hand_minute="@drawable/hand_minute"
             android:hand_second="@drawable/hand_second" />
 
         <LinearLayout
             android:id="@+id/digital_area"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center">
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignLeft="@id/analog_clock"
+            android:layout_alignTop="@id/analog_clock"
+            android:layout_alignRight="@id/analog_clock"
+            android:layout_alignBottom="@id/analog_clock"
+            android:orientation="vertical">
 
-            <TextClock
-                android:id="@+id/digital_clock"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@drawable/digital_plate"
-                android:format12Hour="HH:mm"
-                android:format24Hour="HH:mm"
-                android:gravity="center"
-                android:includeFontPadding="false"
-                android:maxLines="1"
-                android:padding="0dp"
-                android:textColor="#111111"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="57" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="12"
+                android:orientation="horizontal">
+
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="35" />
+
+                <!-- 枠(白い板)の大きさ=文字の大きさ。枠に収まる最大の大きさに自動で調整される -->
+                <TextClock
+                    android:id="@+id/digital_clock"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="30"
+                    android:autoSizeMaxTextSize="40sp"
+                    android:autoSizeMinTextSize="4sp"
+                    android:autoSizeStepGranularity="0.5sp"
+                    android:autoSizeTextType="uniform"
+                    android:background="@drawable/digital_plate"
+                    android:fontFeatureSettings="tnum"
+                    android:format12Hour="HH:mm"
+                    android:format24Hour="HH:mm"
+                    android:gravity="center"
+                    android:includeFontPadding="false"
+                    android:maxLines="1"
+                    android:padding="0dp"
+                    android:textColor="#111111"
+                    android:textStyle="bold" />
+
+                <FrameLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="35" />
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="31" />
         </LinearLayout>
-    </FrameLayout>
+    </RelativeLayout>
 
     <FrameLayout
         android:layout_width="0dp"

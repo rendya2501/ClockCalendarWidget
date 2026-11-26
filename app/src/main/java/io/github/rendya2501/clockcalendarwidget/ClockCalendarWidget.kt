@@ -11,9 +11,7 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.drawable.Icon
-import android.os.Bundle
 import android.provider.AlarmClock
-import android.util.TypedValue
 import android.view.View
 import android.widget.RemoteViews
 import java.time.LocalDate
@@ -23,17 +21,6 @@ class ClockCalendarWidget : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
         ids.forEach { update(context, manager, it) }
-    }
-
-    // ウィジェットのサイズが変更された時に呼び出され、文字サイズなどを動的に再計算する
-    override fun onAppWidgetOptionsChanged(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetId: Int,
-        newOptions: Bundle
-    ) {
-        super.onAppWidgetOptionsChanged(context, appWidgetManager, appWidgetId, newOptions)
-        update(context, appWidgetManager, appWidgetId)
     }
 
     // ウィジェットを削除したら、そのウィジェットの設定も消す
@@ -112,24 +99,8 @@ class ClockCalendarWidget : AppWidgetProvider() {
             views.setViewVisibility(R.id.digital_area, if (config.showDigital) View.VISIBLE else View.GONE)
             views.setString(R.id.digital_clock, "setTimeZone", config.timeZoneId)
 
-            // ウィジェットの現在の物理サイズ(dp)を取得し、都市名(TYO)の仕組みと同じように時計の直径に対する固定比率でフォントサイズと位置を動的制御
-            val options = manager.getAppWidgetOptions(id)
-            val minWidthDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH) ?: 0
-            val minHeightDp = options?.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT) ?: 0
-            if (minWidthDp > 0 && minHeightDp > 0) {
-                val clockWidthDp = minWidthDp * (242f / 648f)
-                val clockHeightDp = (minHeightDp - 19f).coerceAtLeast(10f)
-                val dialSizeDp = minOf(clockWidthDp, clockHeightDp)
-
-                // 1. フォントサイズを時計の直径の 9% に設定(都市名TYOの比率計算ロジックを踏襲)
-                val fontSizeSp = (dialSizeDp * 0.09f).coerceIn(8f, 32f)
-                views.setTextViewTextSize(R.id.digital_clock, TypedValue.COMPLEX_UNIT_SP, fontSizeSp)
-
-                // 2. 位置を時計の直径の 28% 下へオフセット(8と4のラインの少し上に比例固定)
-                val density = context.resources.displayMetrics.density
-                val topPaddingPx = (dialSizeDp * 0.28f * density).roundToInt()
-                views.setViewPadding(R.id.digital_area, 0, topPaddingPx, 0, 0)
-            }
+            // デジタル時計の位置と大きさは、レイアウト側で文字盤に対する比率として決めてある
+            // (ウィジェットの大きさを推定して計算する必要はない)
 
             // 針のタイムゾーン。null なら端末の設定に従う
             // (設定を「端末に従う」へ戻したときに前の値が残らないよう、nullでも必ず指定する)
