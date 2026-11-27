@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   iWidget(648x292px の枠)の実測を比率で表現。
-  左余白46 : 時計242 : 間隔36 : カレンダー265 : 右余白59
+  左余白36 : 時計262 : 間隔32 : カレンダー265 : 右余白53(合計648)
+  もとのiWidgetの実測は 46 : 242 : 36 : 265 : 59。時計を約8%大きくするため、余白と間隔を詰めて時計に回した。
+  文字盤の上下の余白も 9.5dp → 5.5dp にしてある。時計の大きさを変えるときは、この数字(と widget_calendar_clock.xml)をそろえて直す。
   ウィジェットの大きさが変わっても同じ見た目のまま拡大縮小する。
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -15,21 +17,21 @@
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="46" />
+        android:layout_weight="36" />
 
     <!-- 時計の部分は widget_clock_face.xml に共通化してある -->
     <include
         layout="@layout/widget_clock_face"
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_marginTop="9.5dp"
-        android:layout_marginBottom="9.5dp"
-        android:layout_weight="242" />
+        android:layout_marginTop="5.5dp"
+        android:layout_marginBottom="5.5dp"
+        android:layout_weight="262" />
 
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="36" />
+        android:layout_weight="32" />
 
     <ImageView
         android:id="@+id/calendar_image"
@@ -42,5 +44,5 @@
     <FrameLayout
         android:layout_width="0dp"
         android:layout_height="match_parent"
-        android:layout_weight="59" />
+        android:layout_weight="53" />
 </LinearLayout>
