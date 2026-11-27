@@ -15,7 +15,9 @@ import android.graphics.drawable.Icon
 import android.provider.AlarmClock
 import android.view.View
 import android.widget.RemoteViews
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import kotlin.math.roundToInt
 
 class ClockCalendarWidget : AppWidgetProvider() {
@@ -24,8 +26,9 @@ class ClockCalendarWidget : AppWidgetProvider() {
         ids.forEach { update(context, manager, it) }
     }
 
-    // ウィジェットを削除したら、そのウィジェットの設定も消す
+    // ウィジェットを削除したら、そのウィジェットの設定と、0時の更新の予約も消す
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {
+        appWidgetIds.forEach { cancelMidnightUpdate(context, it) }
         WidgetPrefs.delete(context, appWidgetIds)
     }
 
@@ -33,6 +36,13 @@ class ClockCalendarWidget : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         when (intent.action) {
+            // 0時の更新(Android 8以降は、日付変更の通知がマニフェストの受信では届かないので、自分で予約している)
+            ACTION_MIDNIGHT_UPDATE -> {
+                val id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
+                if (id != AppWidgetManager.INVALID_APPWIDGET_ID) {
+                    update(context, AppWidgetManager.getInstance(context), id)
+                }
+            }
             Intent.ACTION_DATE_CHANGED,
             Intent.ACTION_TIME_CHANGED,
             Intent.ACTION_TIMEZONE_CHANGED,
@@ -47,6 +57,9 @@ class ClockCalendarWidget : AppWidgetProvider() {
     }
 
     companion object {
+
+        private const val ACTION_MIDNIGHT_UPDATE = "io.github.rendya2501.clockcalendarwidget.ACTION_MIDNIGHT_UPDATE"
+        private const val MIDNIGHT_REQUEST_BASE = 100_000   // タップ用のPendingIntentの番号と重ならないようにする
 
         /** テーマに合わせた色。「端末に従う」は、更新した時点の端末のダーク/ライト設定で決める */
         private fun paletteFor(context: Context, theme: ThemeMode): Palette {
@@ -123,6 +136,34 @@ class ClockCalendarWidget : AppWidgetProvider() {
             views.setOnClickPendingIntent(R.id.calendar_image, calendarPi)
 
             manager.updateAppWidget(id, views)
+
+            // このウィジェットの地域で、次に日付が変わる時刻に更新する(更新のたびに予約し直す)
+            scheduleMidnightUpdate(context, id, config.zone)
+        }
+
+        private fun midnightPendingIntent(context: Context, id: Int, flag: Int): PendingIntent? {
+            val intent = Intent(context, ClockCalendarWidget::class.java)
+                .setAction(ACTION_MIDNIGHT_UPDATE)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, id)
+            return PendingIntent.getBroadcast(context, MIDNIGHT_REQUEST_BASE + id, intent, flag or PendingIntent.FLAG_IMMUTABLE)
+        }
+
+        /**
+         * 0時の更新を予約する。正確な時刻のアラームではないので、特別な権限は要らない(数分ずれることはある)。
+         * 端末が眠っているときは起こさず、使い始めたときに実行される。
+         */
+        private fun scheduleMidnightUpdate(context: Context, id: Int, zone: ZoneId) {
+            val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
+            val triggerAt = MidnightClock.nextAfter(Instant.now(), zone).toEpochMilli()
+            val pending = midnightPendingIntent(context, id, PendingIntent.FLAG_UPDATE_CURRENT) ?: return
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC, triggerAt, pending)
+        }
+
+        private fun cancelMidnightUpdate(context: Context, id: Int) {
+            val alarmManager = context.getSystemService(AlarmManager::class.java) ?: return
+            val pending = midnightPendingIntent(context, id, PendingIntent.FLAG_NO_CREATE) ?: return
+            alarmManager.cancel(pending)
+            pending.cancel()
         }
 
         /** 設定で選ばれたアプリを起動するPendingIntent。未設定(または削除済み)なら既定のアプリ */

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.icu.text.TimeZoneNames
 import android.icu.util.ULocale
+import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -210,4 +211,14 @@ data class Palette(
             dialRing = 0xFFCFCFCF.toInt(),
         )
     }
+}
+
+/** 日付が変わる時刻(その地域の次の0時)を求める */
+object MidnightClock {
+    /**
+     * now のあとに来る「その地域の0時」の、5秒後。
+     * 夏時間などで0時がない日は、その日の最初の時刻になる。
+     */
+    fun nextAfter(now: Instant, zone: ZoneId): Instant =
+        now.atZone(zone).toLocalDate().plusDays(1).atStartOfDay(zone).toInstant().plusSeconds(5)
 }
