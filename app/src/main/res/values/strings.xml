@@ -16,6 +16,7 @@
     <string name="theme_light">ライト</string>
     <string name="theme_system">端末に従う</string>
     <string name="show_digital">デジタル時計を表示する</string>
+    <string name="show_alarm">アラームのベルを表示する</string>
     <string name="show_label">都市コードを表示する</string>
     <string name="show_second_hand">秒針を表示する</string>
     <string name="monday_start">週の始まりを月曜にする</string>

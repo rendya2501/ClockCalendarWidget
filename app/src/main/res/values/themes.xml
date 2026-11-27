@@ -1,9 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 設定画面。端末のライト/ダーク設定に従う -->
+    <!-- 設定画面(ウィジェットのテーマが「端末に従う」のとき)。端末のライト/ダーク設定に従う -->
     <style name="Theme.ClockCalendarWidget.Settings" parent="android:Theme.DeviceDefault.DayNight">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
+    </style>
+
+    <!-- 設定画面を常にダークにする(ウィジェットのテーマが「ダーク」のとき) -->
+    <style name="Theme.ClockCalendarWidget.Settings.Dark" parent="android:Theme.DeviceDefault">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <!-- 設定画面を常にライトにする(ウィジェットのテーマが「ライト」のとき) -->
+    <style name="Theme.ClockCalendarWidget.Settings.Light" parent="android:Theme.DeviceDefault.Light">
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
     </style>
 
     <!-- 設定画面の見出し -->

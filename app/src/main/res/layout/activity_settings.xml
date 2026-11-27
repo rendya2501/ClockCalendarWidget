@@ -105,6 +105,14 @@
                 android:text="@string/show_digital" />
 
             <Switch
+                android:id="@+id/switch_alarm"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:minHeight="48dp"
+                android:text="@string/show_alarm" />
+
+            <Switch
                 android:id="@+id/switch_label"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

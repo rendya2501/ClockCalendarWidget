@@ -27,12 +27,18 @@ import java.time.ZoneId
  */
 class SettingsActivity : Activity() {
 
+    private companion object {
+        const val STATE_ZONE = "state_zone"
+        const val STATE_THEME = "state_theme"
+    }
+
     private data class AppEntry(val label: String, val packageName: String)
 
     /** 都市の選択肢。id が null のものは「端末の設定に従う」 */
     private data class ZoneItem(val id: String?, val title: String, val searchKey: String)
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
+    private var appliedTheme = ThemeMode.SYSTEM   // この画面にいま適用しているテーマ
 
     private var selectedZoneId: String? = null   // null = 端末のタイムゾーンに従う
     private var zoneItems: List<ZoneItem> = emptyList()
@@ -41,6 +47,7 @@ class SettingsActivity : Activity() {
     private lateinit var zoneRow: TextView
     private lateinit var radioTheme: RadioGroup
     private lateinit var switchDigital: Switch
+    private lateinit var switchAlarm: Switch
     private lateinit var switchLabel: Switch
     private lateinit var switchSecondHand: Switch
     private lateinit var switchMondayStart: Switch
@@ -51,11 +58,27 @@ class SettingsActivity : Activity() {
     private lateinit var spinnerCalendar: Spinner
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
         appWidgetId = intent?.extras?.getInt(
             AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID
         ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+
+        // 設定画面の色も、ウィジェットのテーマ(ダーク/ライト/端末に従う)に合わせる。
+        // テーマはウィンドウができる前に決める必要があるので、super.onCreate の前に適用する。
+        // 画面を作り直した直後(テーマ切り替え・画面回転)は、選びかけの値を引き継ぐ。
+        val savedTheme = savedInstanceState?.getString(STATE_THEME)
+            ?.let { name -> runCatching { ThemeMode.valueOf(name) }.getOrNull() }
+        appliedTheme = savedTheme
+            ?: if (appWidgetId != AppWidgetManager.INVALID_APPWIDGET_ID) WidgetPrefs.load(this, appWidgetId).theme
+            else ThemeMode.SYSTEM
+        setTheme(
+            when (appliedTheme) {
+                ThemeMode.DARK -> R.style.Theme_ClockCalendarWidget_Settings_Dark
+                ThemeMode.LIGHT -> R.style.Theme_ClockCalendarWidget_Settings_Light
+                ThemeMode.SYSTEM -> R.style.Theme_ClockCalendarWidget_Settings
+            }
+        )
+        super.onCreate(savedInstanceState)
+
         if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
             finish()
             return
@@ -69,6 +92,7 @@ class SettingsActivity : Activity() {
         zoneRow = requireViewById<TextView>(R.id.zone_row)
         radioTheme = requireViewById<RadioGroup>(R.id.radio_theme)
         switchDigital = requireViewById<Switch>(R.id.switch_digital)
+        switchAlarm = requireViewById<Switch>(R.id.switch_alarm)
         switchLabel = requireViewById<Switch>(R.id.switch_label)
         switchSecondHand = requireViewById<Switch>(R.id.switch_second_hand)
         switchMondayStart = requireViewById<Switch>(R.id.switch_monday_start)
@@ -84,7 +108,11 @@ class SettingsActivity : Activity() {
         val config = WidgetPrefs.load(this, appWidgetId)
 
         // ---- 都市(タイムゾーン) ----
-        selectedZoneId = config.timeZoneId?.takeIf { runCatching { ZoneId.of(it) }.isSuccess }
+        selectedZoneId = if (savedInstanceState != null) {
+            savedInstanceState.getString(STATE_ZONE)
+        } else {
+            config.timeZoneId?.takeIf { runCatching { ZoneId.of(it) }.isSuccess }
+        }
         updateZoneRow()
         zoneRow.setOnClickListener { showZonePicker() }
 
@@ -96,7 +124,10 @@ class SettingsActivity : Activity() {
                 ThemeMode.SYSTEM -> R.id.radio_theme_system
             }
         )
+        // 作り直した直後は、Androidが選択状態を戻し終えてから見張りを始める(途中の状態で反応しないように)
+        if (savedInstanceState == null) watchThemeChange()
         switchDigital.isChecked = config.showDigital
+        switchAlarm.isChecked = config.showAlarm
         switchLabel.isChecked = config.showLabel
         switchSecondHand.isChecked = config.showSecondHand
         switchMondayStart.isChecked = config.mondayStart
@@ -115,6 +146,33 @@ class SettingsActivity : Activity() {
         setupAppSpinner(spinnerCalendar, getString(R.string.app_default_calendar), config.calendarApp)
 
         requireViewById<Button>(R.id.button_save).setOnClickListener { save() }
+    }
+
+    /** テーマの選択が、いまの画面のテーマと違うものになったら、画面を作り直して色を変える */
+    private fun watchThemeChange() {
+        radioTheme.setOnCheckedChangeListener { _, _ ->
+            if (selectedTheme() != appliedTheme) recreate()
+        }
+    }
+
+    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
+        super.onRestoreInstanceState(savedInstanceState)
+        watchThemeChange()
+    }
+
+    /** ラジオボタンで選ばれているテーマ */
+    private fun selectedTheme(): ThemeMode = when (radioTheme.checkedRadioButtonId) {
+        R.id.radio_theme_light -> ThemeMode.LIGHT
+        R.id.radio_theme_system -> ThemeMode.SYSTEM
+        else -> ThemeMode.DARK
+    }
+
+    // 画面が作り直されても、保存前の選択(都市・テーマ)が消えないようにする。
+    // スイッチやスライダーなど、idのある部品の状態はAndroidが自動で戻す。
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_ZONE, selectedZoneId)
+        outState.putString(STATE_THEME, selectedTheme().name)
     }
 
     /** ステータスバー・ナビゲーションバー・キーボードに隠れないように余白を足す */
@@ -227,12 +285,9 @@ class SettingsActivity : Activity() {
     private fun save() {
         val config = WidgetConfig(
             timeZoneId = selectedZoneId,
-            theme = when (radioTheme.checkedRadioButtonId) {
-                R.id.radio_theme_light -> ThemeMode.LIGHT
-                R.id.radio_theme_system -> ThemeMode.SYSTEM
-                else -> ThemeMode.DARK
-            },
+            theme = selectedTheme(),
             showDigital = switchDigital.isChecked,
+            showAlarm = switchAlarm.isChecked,
             showLabel = switchLabel.isChecked,
             showSecondHand = switchSecondHand.isChecked,
             mondayStart = switchMondayStart.isChecked,

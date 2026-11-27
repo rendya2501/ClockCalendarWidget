@@ -102,8 +102,9 @@ class ClockCalendarWidget : AppWidgetProvider() {
             views.setViewVisibility(R.id.digital_clock, if (config.showDigital) View.VISIBLE else View.GONE)
             views.setString(R.id.digital_clock, "setTimeZone", config.timeZoneId)
 
-            // アラームのベル。次のアラームが設定されているときだけ表示する
-            val hasAlarm = context.getSystemService(AlarmManager::class.java)?.nextAlarmClock != null
+            // アラームのベル。表示設定がオンで、次のアラームが設定されているときだけ表示する
+            val hasAlarm = config.showAlarm &&
+                    context.getSystemService(AlarmManager::class.java)?.nextAlarmClock != null
             views.setViewVisibility(R.id.alarm_icon, if (hasAlarm) View.VISIBLE else View.GONE)
 
             // デジタル時計とベルの位置・大きさは、レイアウト側で文字盤に対する比率として決めてある

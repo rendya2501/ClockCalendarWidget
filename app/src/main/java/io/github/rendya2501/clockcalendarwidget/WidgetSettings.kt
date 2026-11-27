@@ -15,6 +15,7 @@ data class WidgetConfig(
     val mondayStart: Boolean = false,    // カレンダーを月曜始まりにするか(false = 日曜始まり)
     val swapPositions: Boolean = false,  // 時計とカレンダーの左右を入れ替えるか(true = カレンダーが左)
     val theme: ThemeMode = ThemeMode.DARK,  // ダーク / ライト / 端末に従う
+    val showAlarm: Boolean = true,       // 次のアラームがあるとき、ベルを出すか
     val showDigital: Boolean = true,     // 文字盤の中のデジタル時計を表示するか
     val backgroundPercent: Int = 100,    // 背景の濃さ(0〜100%)
     val clockApp: String? = null,     // 時計部分をタップしたときのアプリ(パッケージ名)。null = 既定の時計アプリ
@@ -39,6 +40,7 @@ object WidgetPrefs {
     private const val SWAP = "swap"
     private const val THEME = "theme"
     private const val DIGITAL = "digital"
+    private const val ALARM = "alarm"
     private const val BG_PERCENT = "bg_percent"
     private const val CLOCK_APP = "clock_app"
     private const val CALENDAR_APP = "calendar_app"
@@ -59,6 +61,7 @@ object WidgetPrefs {
             theme = p.getString(key(THEME, id), null)
                 ?.let { name -> runCatching { ThemeMode.valueOf(name) }.getOrNull() } ?: ThemeMode.DARK,
             showDigital = p.getBoolean(key(DIGITAL, id), true),
+            showAlarm = p.getBoolean(key(ALARM, id), true),
             backgroundPercent = p.getInt(key(BG_PERCENT, id), 100).coerceIn(0, 100),
             clockApp = p.getString(key(CLOCK_APP, id), null),
             calendarApp = p.getString(key(CALENDAR_APP, id), null),
@@ -74,6 +77,7 @@ object WidgetPrefs {
             .putBoolean(key(SWAP, id), config.swapPositions)
             .putString(key(THEME, id), config.theme.name)
             .putBoolean(key(DIGITAL, id), config.showDigital)
+            .putBoolean(key(ALARM, id), config.showAlarm)
             .putInt(key(BG_PERCENT, id), config.backgroundPercent.coerceIn(0, 100))
             .putOrRemove(key(CLOCK_APP, id), config.clockApp)
             .putOrRemove(key(CALENDAR_APP, id), config.calendarApp)
@@ -83,7 +87,7 @@ object WidgetPrefs {
     fun delete(context: Context, ids: IntArray) {
         val editor = prefs(context).edit()
         for (id in ids) {
-            listOf(TZ, SHOW_LABEL, SECOND_HAND, MONDAY_START, SWAP, THEME, DIGITAL, BG_PERCENT, CLOCK_APP, CALENDAR_APP).forEach { editor.remove(key(it, id)) }
+            listOf(TZ, SHOW_LABEL, SECOND_HAND, MONDAY_START, SWAP, THEME, DIGITAL, ALARM, BG_PERCENT, CLOCK_APP, CALENDAR_APP).forEach { editor.remove(key(it, id)) }
         }
         editor.apply()
     }
