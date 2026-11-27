@@ -271,13 +271,25 @@ class SettingsActivity : Activity() {
             .sortedBy { it.label.lowercase() }
     }
 
-    private fun setupAppSpinner(spinner: Spinner, defaultLabel: String, selectedPackage: String?) {
-        val labels = listOf(defaultLabel) + apps.map { it.label }
+    /** 0番目は「既定」、1番目は「何もしない」、2番目からがアプリ */
+    private fun setupAppSpinner(spinner: Spinner, defaultLabel: String, selected: String?) {
+        val labels = listOf(defaultLabel, getString(R.string.app_none)) + apps.map { it.label }
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, labels)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
-        val index = apps.indexOfFirst { it.packageName == selectedPackage }
-        spinner.setSelection(if (index >= 0) index + 1 else 0)   // 0番目は「既定」
+        val index = when (selected) {
+            null -> 0
+            TapTarget.NONE -> 1
+            else -> apps.indexOfFirst { it.packageName == selected }.let { if (it >= 0) it + 2 else 0 }
+        }
+        spinner.setSelection(index)
+    }
+
+    /** スピナーの選択を、設定に保存する値に直す(null = 既定) */
+    private fun tapTargetOf(spinner: Spinner): String? = when (val position = spinner.selectedItemPosition) {
+        0 -> null
+        1 -> TapTarget.NONE
+        else -> apps.getOrNull(position - 2)?.packageName
     }
 
     // ---------------------------------------------------------------- 保存
@@ -293,8 +305,8 @@ class SettingsActivity : Activity() {
             mondayStart = switchMondayStart.isChecked,
             swapPositions = switchSwap.isChecked,
             backgroundPercent = seekBackground.progress,
-            clockApp = apps.getOrNull(spinnerClock.selectedItemPosition - 1)?.packageName,
-            calendarApp = apps.getOrNull(spinnerCalendar.selectedItemPosition - 1)?.packageName,
+            clockApp = tapTargetOf(spinnerClock),
+            calendarApp = tapTargetOf(spinnerCalendar),
         )
         WidgetPrefs.save(this, appWidgetId, config)
         ClockCalendarWidget.update(this, AppWidgetManager.getInstance(this), appWidgetId)

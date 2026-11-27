@@ -19,8 +19,8 @@ data class WidgetConfig(
     val showAlarm: Boolean = true,       // 次のアラームがあるとき、ベルを出すか
     val showDigital: Boolean = true,     // 文字盤の中のデジタル時計を表示するか
     val backgroundPercent: Int = 100,    // 背景の濃さ(0〜100%)
-    val clockApp: String? = null,     // 時計部分をタップしたときのアプリ(パッケージ名)。null = 既定の時計アプリ
-    val calendarApp: String? = null,  // カレンダー部分をタップしたときのアプリ。null = 既定のカレンダーアプリ
+    val clockApp: String? = null,     // 時計部分をタップしたときのアプリ(パッケージ名)。null = 既定の時計アプリ、TapTarget.NONE = 何もしない
+    val calendarApp: String? = null,  // カレンダー部分をタップしたときのアプリ。null = 既定のカレンダーアプリ、TapTarget.NONE = 何もしない
 ) {
     /** 実際に使うタイムゾーン */
     val zone: ZoneId
@@ -221,4 +221,10 @@ object MidnightClock {
      */
     fun nextAfter(now: Instant, zone: ZoneId): Instant =
         now.atZone(zone).toLocalDate().plusDays(1).atStartOfDay(zone).toInstant().plusSeconds(5)
+}
+
+/** タップしたときの動きで、アプリ以外の選択肢 */
+object TapTarget {
+    /** 「何もしない」。パッケージ名には使えない文字(:)を含むので、アプリ名と重ならない */
+    const val NONE = ":none:"
 }

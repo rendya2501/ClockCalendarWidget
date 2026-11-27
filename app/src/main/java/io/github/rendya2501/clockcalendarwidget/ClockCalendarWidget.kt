@@ -58,6 +58,7 @@ class ClockCalendarWidget : AppWidgetProvider() {
 
     companion object {
 
+        private const val ACTION_TAP_NOOP = "io.github.rendya2501.clockcalendarwidget.ACTION_TAP_NOOP"
         private const val ACTION_MIDNIGHT_UPDATE = "io.github.rendya2501.clockcalendarwidget.ACTION_MIDNIGHT_UPDATE"
         private const val MIDNIGHT_REQUEST_BASE = 100_000   // タップ用のPendingIntentの番号と重ならないようにする
 
@@ -173,6 +174,14 @@ class ClockCalendarWidget : AppWidgetProvider() {
             chosenPackage: String?,
             defaultIntent: (Context) -> Intent,
         ): PendingIntent {
+            // 「何もしない」。クリックの設定を外す方法は、前に設定した動きが残ることがあるので、
+            // 何も起きない通知(受け取っても無視する)を指定して、確実に上書きする
+            if (chosenPackage == TapTarget.NONE) {
+                val noop = Intent(context, ClockCalendarWidget::class.java).setAction(ACTION_TAP_NOOP)
+                return PendingIntent.getBroadcast(
+                    context, requestCode, noop, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                )
+            }
             val chosen = chosenPackage?.let { context.packageManager.getLaunchIntentForPackage(it) }
             val intent = (chosen ?: defaultIntent(context)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             return PendingIntent.getActivity(

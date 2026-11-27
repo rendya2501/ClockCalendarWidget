@@ -25,6 +25,7 @@
     <string name="section_apps">タップしたときに開くアプリ</string>
     <string name="tap_clock">時計の部分</string>
     <string name="tap_calendar">カレンダーの部分</string>
+    <string name="app_none">何もしない</string>
     <string name="app_default_clock">既定の時計アプリ</string>
     <string name="app_default_calendar">既定のカレンダーアプリ</string>
     <string name="save">保存</string>
