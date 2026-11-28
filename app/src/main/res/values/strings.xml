@@ -9,6 +9,7 @@
     <string name="zone_city">都市</string>
     <string name="follow_system_zone">端末の設定に従う</string>
     <string name="zone_row_system">端末の設定: %1$s</string>
+    <string name="picker_search_hint_app">アプリ名で検索</string>
     <string name="picker_search_hint">都市名・コードで検索(例: London)</string>
     <string name="section_display">表示</string>
     <string name="theme">テーマ</string>

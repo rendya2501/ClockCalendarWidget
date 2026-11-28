@@ -166,12 +166,18 @@
                 android:layout_height="wrap_content"
                 android:text="@string/tap_clock" />
 
-            <Spinner
-                android:id="@+id/spinner_clock"
+            <TextView
+                android:id="@+id/tap_clock_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:drawableEnd="@android:drawable/arrow_down_float"
+                android:drawableTint="?android:attr/textColorSecondary"
+                android:focusable="true"
+                android:gravity="center_vertical"
                 android:minHeight="48dp"
-                android:spinnerMode="dialog" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <TextView
                 android:layout_width="match_parent"
@@ -179,12 +185,18 @@
                 android:layout_marginTop="8dp"
                 android:text="@string/tap_calendar" />
 
-            <Spinner
-                android:id="@+id/spinner_calendar"
+            <TextView
+                android:id="@+id/tap_calendar_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:background="?android:attr/selectableItemBackground"
+                android:clickable="true"
+                android:drawableEnd="@android:drawable/arrow_down_float"
+                android:drawableTint="?android:attr/textColorSecondary"
+                android:focusable="true"
+                android:gravity="center_vertical"
                 android:minHeight="48dp"
-                android:spinnerMode="dialog" />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
         </LinearLayout>
     </ScrollView>

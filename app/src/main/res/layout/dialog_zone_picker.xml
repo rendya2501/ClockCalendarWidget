@@ -7,15 +7,37 @@
     android:paddingTop="16dp"
     android:paddingEnd="20dp">
 
+    <!-- 検索欄の上下に余白をとり、高さも少し広げてある -->
     <EditText
         android:id="@+id/picker_search"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:hint="@string/picker_search_hint"
         android:imeOptions="actionDone"
         android:inputType="textNoSuggestions"
         android:maxLines="1"
-        android:minHeight="48dp" />
+        android:minHeight="52dp" />
+
+    <!-- 「既定」「何もしない」など、スクロールや検索で動かさない行 -->
+    <LinearLayout
+        android:id="@+id/picker_pinned_group"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/picker_pinned"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="?android:attr/listDivider" />
+    </LinearLayout>
 
     <ListView
         android:id="@+id/picker_list"

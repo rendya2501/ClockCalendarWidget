@@ -11,11 +11,12 @@ import android.view.View
 import android.view.WindowInsets
 import android.widget.ArrayAdapter
 import android.widget.Button
+import android.widget.CheckedTextView
 import android.widget.EditText
+import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.RadioGroup
 import android.widget.SeekBar
-import android.widget.Spinner
 import android.widget.Switch
 import android.widget.TextView
 import java.text.Collator
@@ -30,18 +31,32 @@ class SettingsActivity : Activity() {
     private companion object {
         const val STATE_ZONE = "state_zone"
         const val STATE_THEME = "state_theme"
+        const val STATE_CLOCK_TAP = "state_clock_tap"
+        const val STATE_CALENDAR_TAP = "state_calendar_tap"
     }
 
     private data class AppEntry(val label: String, val packageName: String)
 
-    /** 都市の選択肢。id が null のものは「端末の設定に従う」 */
-    private data class ZoneItem(val id: String?, val title: String, val searchKey: String)
+    /**
+     * 選択画面(都市・アプリ共通)の1行。
+     * value が null のものは「既定」(都市なら「端末の設定に従う」)。
+     * pinned の行は、一覧の外(検索欄の下)に固定して、スクロールや検索で動かないようにする。
+     * searchKey は、画面に出ない検索用の文字(英語の都市名やパッケージ名など)。
+     */
+    private data class PickerItem(
+        val value: String?,
+        val title: String,
+        val searchKey: String = "",
+        val pinned: Boolean = false,
+    )
 
     private var appWidgetId = AppWidgetManager.INVALID_APPWIDGET_ID
     private var appliedTheme = ThemeMode.SYSTEM   // この画面にいま適用しているテーマ
 
     private var selectedZoneId: String? = null   // null = 端末のタイムゾーンに従う
-    private var zoneItems: List<ZoneItem> = emptyList()
+    private var zoneItems: List<PickerItem> = emptyList()
+    private var clockTap: String? = null       // 時計の部分をタップしたとき。null = 既定、TapTarget.NONE = 何もしない、それ以外 = アプリ
+    private var calendarTap: String? = null    // カレンダーの部分をタップしたとき(同上)
     private var apps: List<AppEntry> = emptyList()
 
     private lateinit var zoneRow: TextView
@@ -54,8 +69,8 @@ class SettingsActivity : Activity() {
     private lateinit var switchSwap: Switch
     private lateinit var backgroundLabel: TextView
     private lateinit var seekBackground: SeekBar
-    private lateinit var spinnerClock: Spinner
-    private lateinit var spinnerCalendar: Spinner
+    private lateinit var clockRow: TextView
+    private lateinit var calendarRow: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         appWidgetId = intent?.extras?.getInt(
@@ -99,8 +114,8 @@ class SettingsActivity : Activity() {
         switchSwap = requireViewById<Switch>(R.id.switch_swap)
         backgroundLabel = requireViewById<TextView>(R.id.background_label)
         seekBackground = requireViewById<SeekBar>(R.id.seek_background)
-        spinnerClock = requireViewById<Spinner>(R.id.spinner_clock)
-        spinnerCalendar = requireViewById<Spinner>(R.id.spinner_calendar)
+        clockRow = requireViewById<TextView>(R.id.tap_clock_row)
+        calendarRow = requireViewById<TextView>(R.id.tap_calendar_row)
 
         zoneItems = buildZoneItems()
         apps = loadApps()
@@ -141,9 +156,27 @@ class SettingsActivity : Activity() {
         seekBackground.progress = config.backgroundPercent
         updateBackgroundLabel(config.backgroundPercent)
 
-        // ---- タップしたときに開くアプリ ----
-        setupAppSpinner(spinnerClock, getString(R.string.app_default_clock), config.clockApp)
-        setupAppSpinner(spinnerCalendar, getString(R.string.app_default_calendar), config.calendarApp)
+        // ---- タップしたときの動き(既定 / 何もしない / アプリ) ----
+        if (savedInstanceState != null) {
+            clockTap = savedInstanceState.getString(STATE_CLOCK_TAP)
+            calendarTap = savedInstanceState.getString(STATE_CALENDAR_TAP)
+        } else {
+            clockTap = installedOrDefault(config.clockApp)
+            calendarTap = installedOrDefault(config.calendarApp)
+        }
+        updateTapRows()
+        clockRow.setOnClickListener {
+            showTapPicker(getString(R.string.tap_clock), getString(R.string.app_default_clock), clockTap) {
+                clockTap = it
+                updateTapRows()
+            }
+        }
+        calendarRow.setOnClickListener {
+            showTapPicker(getString(R.string.tap_calendar), getString(R.string.app_default_calendar), calendarTap) {
+                calendarTap = it
+                updateTapRows()
+            }
+        }
 
         requireViewById<Button>(R.id.button_save).setOnClickListener { save() }
     }
@@ -172,6 +205,8 @@ class SettingsActivity : Activity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(STATE_ZONE, selectedZoneId)
+        outState.putString(STATE_CLOCK_TAP, clockTap)
+        outState.putString(STATE_CALENDAR_TAP, calendarTap)
         outState.putString(STATE_THEME, selectedTheme().name)
     }
 
@@ -188,19 +223,18 @@ class SettingsActivity : Activity() {
     // ---------------------------------------------------------------- 都市(タイムゾーン)
 
     /** 先頭に「端末の設定に従う」、その後ろに都市名順の「東京 (TYO)」を並べる */
-    private fun buildZoneItems(): List<ZoneItem> {
+    private fun buildZoneItems(): List<PickerItem> {
         val collator = Collator.getInstance()
         val cities = ZoneCatalog.ids().map { id ->
             val zone = ZoneId.of(id)
-            ZoneItem(
-                id = id,
+            PickerItem(
+                value = id,
                 title = ZoneLabels.title(zone),
-                // 端末の言語の都市名・英語の都市名・都市コード・IDのどれでも検索できる
-                searchKey = "${ZoneLabels.displayName(id)} ${ZoneLabels.cityName(id)} " +
-                        "${ZoneLabels.codeFor(zone)} $id".lowercase(),
+                // 画面の名前(端末の言語の都市名・都市コード)に加えて、英語の都市名とIDでも探せる
+                searchKey = "${ZoneLabels.cityName(id)} $id".lowercase(),
             )
         }.sortedWith(Comparator { a, b -> collator.compare(a.title, b.title) })
-        return listOf(ZoneItem(null, getString(R.string.follow_system_zone), "")) + cities
+        return listOf(PickerItem(null, getString(R.string.follow_system_zone), pinned = true)) + cities
     }
 
     /** 設定画面の「東京 (TYO) ▼」の行 */
@@ -215,28 +249,100 @@ class SettingsActivity : Activity() {
 
     /** 検索欄つきの都市一覧を出す。選ぶとすぐ閉じる */
     private fun showZonePicker() {
+        showPicker(getString(R.string.section_zone), getString(R.string.picker_search_hint), zoneItems, selectedZoneId) {
+            selectedZoneId = it
+            updateZoneRow()
+        }
+    }
+
+    /**
+     * 都市・アプリで共通の選択画面。上に検索欄、その下に固定する行、その下に一覧、下にキャンセルボタン。
+     * 選択中の行にはチェックが付く。
+     * 固定する行(pinned。「既定」「何もしない」など)は一覧の外に置くので、スクロールしても、検索しても動かない。
+     * 検索は、画面に見える名前に含まれる文字で探す。画面に出ないパッケージ名やIDは、3文字以上のときだけ、
+     * 名前でヒットしたものの後ろに足す(「q」と打っただけで、名前に関係ないものが出ないように)。
+     * @param selected いま選ばれている value(null = 既定)
+     */
+    private fun showPicker(
+        title: String,
+        searchHint: String,
+        items: List<PickerItem>,
+        selected: String?,
+        onPicked: (String?) -> Unit,
+    ) {
         val view = layoutInflater.inflate(R.layout.dialog_zone_picker, null)
         val search = view.requireViewById<EditText>(R.id.picker_search)
+        val pinnedGroup = view.requireViewById<LinearLayout>(R.id.picker_pinned_group)
+        val pinnedBox = view.requireViewById<LinearLayout>(R.id.picker_pinned)
         val list = view.requireViewById<ListView>(R.id.picker_list)
+        search.hint = searchHint
         list.choiceMode = ListView.CHOICE_MODE_SINGLE
 
         val dialog = AlertDialog.Builder(this)
+            .setTitle(title)
             .setView(view)
             .setNegativeButton(android.R.string.cancel, null)
             .create()
 
-        var shown: List<ZoneItem> = zoneItems
+        val pinned = items.filter { it.pinned }
+        val scrolling = items.filter { !it.pinned }
+
+        val density = resources.displayMetrics.density
+        fun dp(value: Int) = (value * density).toInt()
+        val pinnedRowHeight = 40   // 固定する行の高さ(dp)。標準の約48dpより細くして、一覧に高さを回す
+
+        // 固定する行
+        pinnedGroup.visibility = if (pinned.isEmpty()) View.GONE else View.VISIBLE
+        pinned.forEach { item ->
+            val row = layoutInflater.inflate(android.R.layout.simple_list_item_checked, pinnedBox, false) as CheckedTextView
+            row.text = item.title
+            row.isChecked = item.value == selected
+            row.minHeight = dp(pinnedRowHeight)
+            row.minimumHeight = dp(pinnedRowHeight)
+            row.setOnClickListener {
+                onPicked(item.value)
+                dialog.dismiss()
+            }
+            pinnedBox.addView(row)
+        }
+
+        // キーボードが出ている間は、固定する行を隠して、一覧に高さを回す(隠すのは、検索中は選ばないと割り切っているため)。
+        // 一覧の高さは、固定する行があるときは、その分だけ縮める。
+        var imeVisible = false
+        fun applyLayout() {
+            val listHeight = if (imeVisible) 144 else 320 - pinnedRowHeight * pinned.size
+            list.layoutParams = list.layoutParams.apply { height = dp(listHeight) }
+            pinnedGroup.visibility = if (pinned.isEmpty() || imeVisible) View.GONE else View.VISIBLE
+        }
+        applyLayout()
+        dialog.setOnShowListener {
+            val decor = dialog.window?.decorView ?: return@setOnShowListener
+            decor.setOnApplyWindowInsetsListener { v, insets ->
+                val visible = insets.isVisible(WindowInsets.Type.ime())
+                if (visible != imeVisible) {
+                    imeVisible = visible
+                    applyLayout()
+                }
+                v.onApplyWindowInsets(insets)
+            }
+            decor.requestApplyInsets()
+        }
+
+        var shown: List<PickerItem> = scrolling
 
         fun render(query: String) {
             val q = query.trim().lowercase()
-            shown = if (q.isEmpty()) zoneItems else zoneItems.filter { it.id != null && it.searchKey.contains(q) }
-            list.adapter = ArrayAdapter(
-                this, android.R.layout.simple_list_item_checked, shown.map { it.title }
-            )
-            val checked = shown.indexOfFirst { it.id == selectedZoneId }
+            shown = if (q.isEmpty()) {
+                scrolling
+            } else {
+                val (byName, others) = scrolling.partition { it.title.lowercase().contains(q) }
+                byName + if (q.length >= 3) others.filter { it.searchKey.contains(q) } else emptyList()
+            }
+            list.adapter = ArrayAdapter(this, android.R.layout.simple_list_item_checked, shown.map { it.title })
+            val checked = shown.indexOfFirst { it.value == selected }
             if (checked >= 0) {
                 list.setItemChecked(checked, true)
-                list.setSelection(checked)   // 選択中の都市が見える位置までスクロール
+                list.setSelection(checked)   // 選択中の行が見える位置までスクロール
             }
         }
 
@@ -247,8 +353,7 @@ class SettingsActivity : Activity() {
             override fun afterTextChanged(s: Editable?) = render(s?.toString().orEmpty())
         })
         list.setOnItemClickListener { _, _, position, _ ->
-            selectedZoneId = shown[position].id
-            updateZoneRow()
+            onPicked(shown[position].value)
             dialog.dismiss()
         }
         dialog.show()
@@ -271,25 +376,29 @@ class SettingsActivity : Activity() {
             .sortedBy { it.label.lowercase() }
     }
 
-    /** 0番目は「既定」、1番目は「何もしない」、2番目からがアプリ */
-    private fun setupAppSpinner(spinner: Spinner, defaultLabel: String, selected: String?) {
-        val labels = listOf(defaultLabel, getString(R.string.app_none)) + apps.map { it.label }
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, labels)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinner.adapter = adapter
-        val index = when (selected) {
-            null -> 0
-            TapTarget.NONE -> 1
-            else -> apps.indexOfFirst { it.packageName == selected }.let { if (it >= 0) it + 2 else 0 }
-        }
-        spinner.setSelection(index)
+    /** 保存してあるアプリが、もう入っていなければ「既定」に戻す(「既定」「何もしない」はそのまま) */
+    private fun installedOrDefault(saved: String?): String? =
+        if (saved == null || saved == TapTarget.NONE || apps.any { it.packageName == saved }) saved else null
+
+    /** 設定画面の「既定の時計アプリ ▼」などの行 */
+    private fun updateTapRows() {
+        clockRow.text = tapTitle(clockTap, getString(R.string.app_default_clock))
+        calendarRow.text = tapTitle(calendarTap, getString(R.string.app_default_calendar))
     }
 
-    /** スピナーの選択を、設定に保存する値に直す(null = 既定) */
-    private fun tapTargetOf(spinner: Spinner): String? = when (val position = spinner.selectedItemPosition) {
-        0 -> null
-        1 -> TapTarget.NONE
-        else -> apps.getOrNull(position - 2)?.packageName
+    private fun tapTitle(value: String?, defaultLabel: String): String = when (value) {
+        null -> defaultLabel
+        TapTarget.NONE -> getString(R.string.app_none)
+        else -> apps.firstOrNull { it.packageName == value }?.label ?: defaultLabel
+    }
+
+    /** 「既定」「何もしない」を一番上に固定して、そのあとにアプリを並べた、検索できる一覧を出す */
+    private fun showTapPicker(title: String, defaultLabel: String, selected: String?, onPicked: (String?) -> Unit) {
+        val items = listOf(
+            PickerItem(null, defaultLabel, pinned = true),
+            PickerItem(TapTarget.NONE, getString(R.string.app_none), pinned = true),
+        ) + apps.map { PickerItem(it.packageName, it.label, it.packageName.lowercase()) }
+        showPicker(title, getString(R.string.picker_search_hint_app), items, selected, onPicked)
     }
 
     // ---------------------------------------------------------------- 保存
@@ -305,8 +414,8 @@ class SettingsActivity : Activity() {
             mondayStart = switchMondayStart.isChecked,
             swapPositions = switchSwap.isChecked,
             backgroundPercent = seekBackground.progress,
-            clockApp = tapTargetOf(spinnerClock),
-            calendarApp = tapTargetOf(spinnerCalendar),
+            clockApp = clockTap,
+            calendarApp = calendarTap,
         )
         WidgetPrefs.save(this, appWidgetId, config)
         ClockCalendarWidget.update(this, AppWidgetManager.getInstance(this), appWidgetId)
